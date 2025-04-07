@@ -1,0 +1,19 @@
+# List of sql queries to create the worldcup database
+
+## Log into PostgreSQL database from bash terminal with:
+psql --username=freecodecamp --dbname=postgres 
+
+CREATE DATABASE worldcup;
+
+\c worldcup
+
+CREATE TABLE teams(team_id SERIAL PRIMARY KEY, name UNIQUE VARCHAR(50) NOT NULL);
+
+CREATE TABLE games(game_id SERIAL PRIMARY KEY, year INT NOT NULL, round VARCHAR(2) NOT NULL, winner_goals INT NOT NULL, opponent_goals INT NOT NULL);
+
+ALTER TABLE games ADD FOREIGN KEY (winner_id) REFERENCES teams(team_id),  ADD FOREIGN KEY (opponent_id) REFERENCES teams(team_id);
+
+## In bash terminal give executable permission to .sh files
+### When these permissions are enabled, the tests will take significantly longer to run
+chmod +x insert_data.sh queries.sh
+
