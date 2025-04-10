@@ -10,6 +10,45 @@ else
 fi
 
 # Do not change code above this line. Use the PSQL variable above to query your database.
+# ------------------------------------------------------------------------
 
 # delete all contents from all tables in worldcup db to start fresh
 echo "$($PSQL "TRUNCATE TABLE teams, games;")"
+
+# csv file
+file="games_test.csv"
+
+# populate teams table
+team_names_array=()
+declare -A assoc_array
+
+# variable to make loop skip csv headers row
+first_line="true"
+
+while IFS=',' read -r col1 col2 col3 col4 col5 col6
+do
+  # skip header line of csv
+  if [[ "$first_line" == "true" ]]
+  then
+    first_line="false"
+    continue
+  fi
+
+  # associateive arrays require all keys to be unique so assigning team names as keys automaticall filters out duplicate team names
+  assoc_array["$col3"]=0
+  assoc_array["$col4"]=0
+
+done < "$file"
+
+# assigning associate array keys as array values of team_names_array
+team_names_array+=("${!assoc_array[@]}")
+
+# insert team names into teams table
+for item in "${team_names_array[@]}";
+do
+  echo $item
+  echo "$($PSQL "INSERT INTO teams(name) VALUES('$item');")"
+done
+
+
+# populate games table
