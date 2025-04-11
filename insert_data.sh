@@ -52,3 +52,27 @@ done
 
 
 # populate games table
+
+# variable to make loop skip csv headers row
+first_line="true"
+
+while IFS=',' read -r col1 col2 col3 col4 col5 col6
+do
+  # skip header line of csv
+  if [[ "$first_line" == "true" ]]
+  then
+    first_line="false"
+    continue
+  fi
+
+  # assoc_array=()    ?
+
+# use current associate array, wipe it, then query the games table
+# and make the team name the key and the team_id the value
+
+# then in the insert statement for games, use ${assoc_array[France]} to insert
+# the france team_id
+
+# what columns do you need to insert into the games table?
+
+done < "$file"
