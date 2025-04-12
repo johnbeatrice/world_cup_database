@@ -13,18 +13,18 @@ fi
 # ------------------------------------------------------------------------
 
 # delete all contents from all tables in worldcup db to start fresh
-echo "$($PSQL "TRUNCATE TABLE teams, games;")"
+echo -e "$($PSQL "TRUNCATE TABLE teams, games;")\n"
 # delete teams.csv to start fresh
 rm teams.csv
 
 # csv file
-file="games_test.csv"
+file="games.csv"
 
 # populate teams table
 team_names_array=()
 declare -A assoc_array
 
-# variable to make loop skip csv headers row
+# variable to make while loop skip csv headers row
 first_line="true"
 
 while IFS=',' read -r year round winner opponent winner_goals opponent_goals
@@ -45,10 +45,9 @@ done < "$file"
 # assigning associate array keys as array values of team_names_array
 team_names_array+=("${!assoc_array[@]}")
 
-# insert team names into teams table
+# *** insert team names into teams table ***
 for item in "${team_names_array[@]}";
 do
-  echo $item
   echo "$($PSQL "INSERT INTO teams(name) VALUES('$item');")"
 done
 
@@ -78,9 +77,11 @@ done
 # print teams table to compare to printed contents of associative array for validation
 echo -e "\n -- Contents of teams table --" 
 echo -e "team_id|name" 
-echo "$($PSQL "SELECT * FROM teams;")"
+echo -e "$($PSQL "SELECT * FROM teams;")\n"
 
-# insert values into games table
+# variable to make while loop skip csv headers row
+first_line="true"
+# *** insert values into games table ***
 while IFS=',' read -r year round winner opponent winner_goals opponent_goals
 do
   # skip header line of csv
@@ -90,15 +91,6 @@ do
     continue
   fi
 
-  # echo typeof $year
-
-  echo "$($PSQL "INSERT INTO games(year, round, winner_id, opponent_id, winner_goals, opponent_goals) VALUES(2018, '$round', '${assoc_array[$winner]}', '${assoc_array[$opponent]}', '$winner_goals', '$opponent_goals');")"
+  echo "$($PSQL "INSERT INTO games(year, round, winner_id, opponent_id, winner_goals, opponent_goals) VALUES('$year', '$round', '${assoc_array[$winner]}', '${assoc_array[$opponent]}', '$winner_goals', '$opponent_goals');")"
 
 done < "$file"
- # use current associate array, wipe it, then query the games table
-# # and make the team name the key and the team_id the value
-
-# # then in the insert statement for games, use ${assoc_array[France]} to insert
-# # the france team_id
-
-# # what columns do you need to insert into the games table?
