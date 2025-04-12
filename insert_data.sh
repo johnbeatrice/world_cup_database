@@ -14,6 +14,8 @@ fi
 
 # delete all contents from all tables in worldcup db to start fresh
 echo "$($PSQL "TRUNCATE TABLE teams, games;")"
+# delete teams.csv to start fresh
+rm teams.csv
 
 # csv file
 file="games_test.csv"
@@ -25,7 +27,7 @@ declare -A assoc_array
 # variable to make loop skip csv headers row
 first_line="true"
 
-while IFS=',' read -r col1 col2 col3 col4 col5 col6
+while IFS=',' read -r year round winner opponent winner_goals opponent_goals
 do
   # skip header line of csv
   if [[ "$first_line" == "true" ]]
@@ -35,8 +37,8 @@ do
   fi
 
   # associateive arrays require all keys to be unique so assigning team names as keys automaticall filters out duplicate team names
-  assoc_array["$col3"]=0
-  assoc_array["$col4"]=0
+  assoc_array["$winner"]=0
+  assoc_array["$opponent"]=0
 
 done < "$file"
 
@@ -53,10 +55,33 @@ done
 
 # populate games table
 
-# variable to make loop skip csv headers row
-first_line="true"
+# first clear associative array
+assoc_array=()
 
-while IFS=',' read -r col1 col2 col3 col4 col5 col6
+# put teams table into csv file
+echo "$($PSQL "SELECT * FROM teams;")" >> teams.csv
+
+# insert values from teams.csv into associative array with team names as keys
+while IFS='|' read -r team_id team_name
+do
+ assoc_array[$team_name]=$team_id
+
+done < "teams.csv"
+
+# print contents of associative array for confirmation
+echo -e "\n -- contents of assoc_array variable --" 
+for key in ${!assoc_array[@]};
+do
+  echo "Key: $key, Value: ${assoc_array[$key]}"
+done
+
+# print teams table to compare to printed contents of associative array for validation
+echo -e "\n -- Contents of teams table --" 
+echo -e "team_id|name" 
+echo "$($PSQL "SELECT * FROM teams;")"
+
+# insert values into games table
+while IFS=',' read -r year round winner opponent winner_goals opponent_goals
 do
   # skip header line of csv
   if [[ "$first_line" == "true" ]]
@@ -65,14 +90,15 @@ do
     continue
   fi
 
-  # assoc_array=()    ?
+  # echo typeof $year
 
-# use current associate array, wipe it, then query the games table
-# and make the team name the key and the team_id the value
-
-# then in the insert statement for games, use ${assoc_array[France]} to insert
-# the france team_id
-
-# what columns do you need to insert into the games table?
+  echo "$($PSQL "INSERT INTO games(year, round, winner_id, opponent_id, winner_goals, opponent_goals) VALUES(2018, '$round', '${assoc_array[$winner]}', '${assoc_array[$opponent]}', '$winner_goals', '$opponent_goals');")"
 
 done < "$file"
+ # use current associate array, wipe it, then query the games table
+# # and make the team name the key and the team_id the value
+
+# # then in the insert statement for games, use ${assoc_array[France]} to insert
+# # the france team_id
+
+# # what columns do you need to insert into the games table?
